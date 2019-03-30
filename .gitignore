@@ -1,0 +1,6 @@
+*
+!.gitignore
+!shell.nix
+!main
+!main.py
+!data.json
