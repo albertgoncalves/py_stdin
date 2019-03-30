@@ -8,14 +8,15 @@ module Y = Sys
  *)
 
 type world = World
-type 'a io = ('a * world)
-type 'a io_t = (world -> 'a io) (* IO Transformer! *)
+type 'a io = (world -> ('a * world)) (* IO Transformer! *)
 
 let (|.) (f : 'b -> 'c) (g : 'a -> 'b) : ('a -> 'c) = fun x -> f (g x)
 let uncurry (f : ('a -> 'b -> 'c)) : (('a * 'b) -> 'c) = (fun (a, b) -> f a b)
 let curry (f : (('a * 'b) -> 'c)) : ('a -> 'b -> 'c) = (fun a b -> f (a, b))
 
-let read_pure (io : world) : string io =
+let touch_world (x : 'a) : 'a io = (fun io -> (x, io))
+
+let read_pure : string io =
     let read : (unit -> string) =
         let line () : string option =
             try Some (input_line stdin) with End_of_file -> None in
@@ -24,24 +25,24 @@ let read_pure (io : world) : string io =
                 | Some x -> loop (x::accu) (line ())
                 | None -> L.rev accu in
         S.concat "\n" |. loop [] |. line in
-    (read (), io)
+    (touch_world |. read) ()
 
-let print_pure (f : string -> unit) (s : string) (io : world) : unit io =
-    (f s, io)
+let print_pure (f : string -> unit) (s : string) : unit io =
+    (touch_world |. f) s
 
-let args_pure (io : world) : string array io = (Y.argv, io)
+let args_pure : string array io = touch_world Y.argv
 
-let bind (m : 'a io_t) (f : 'a -> 'b io_t) : 'b io_t = uncurry f |. m
-let (>>=) : ('a io_t -> ('a -> 'b io_t) -> 'b io_t) = bind
+let bind (m : 'a io) (f : 'a -> 'b io) : 'b io = uncurry f |. m
+let (>>=) : ('a io -> ('a -> 'b io) -> 'b io) = bind
 
-let interact : unit io_t =
+let interact : unit io =
     read_pure >>= (fun lines ->
         args_pure >>= (fun args ->
             let all_input =
                 S.concat "\n" [(S.concat " " |. A.to_list) args; lines] in
             (print_pure print_endline all_input)))
 
-let world_to_void (f : unit io_t) : unit = ((fun _ -> ()) |. f) World
+let world_to_void (f : unit io) : unit = ((fun _ -> ()) |. f) World
 
 let main () = interact |> world_to_void
 
