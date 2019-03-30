@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
 cat data.json | python main.py -foo --bar --baz=jazz
+cat data.json | ocaml main.ml -foo --bar --baz=jazz

@@ -2,6 +2,12 @@
 with pkgs; mkShell {
     name = "Python";
     buildInputs = [
+        (with ocaml-ng.ocamlPackages_4_07; [
+            ocaml
+            findlib
+            ocp-indent
+            utop
+        ])
         (python37.withPackages(ps: with ps; [
             flake8
         ]))
