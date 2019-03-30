@@ -16,15 +16,15 @@ let curry (f : (('a * 'b) -> 'c)) : ('a -> 'b -> 'c) = (fun a b -> f (a, b))
 
 let touch_world (x : 'a) : 'a io = (fun io -> (x, io))
 
-let read_pure : string io =
-    let read : (unit -> string) =
+let stdin_pure : string list io =
+    let read : (unit -> string list) =
         let line () : string option =
             try Some (input_line stdin) with End_of_file -> None in
         let rec loop (accu : string list) : (string option -> string list) =
             function
                 | Some x -> loop (x::accu) (line ())
                 | None -> L.rev accu in
-        S.concat "\n" |. loop [] |. line in
+        loop [] |. line in
     (touch_world |. read) ()
 
 let print_pure (f : string -> unit) (s : string) : unit io =
@@ -36,10 +36,14 @@ let bind (m : 'a io) (f : 'a -> 'b io) : 'b io = uncurry f |. m
 let (>>=) : ('a io -> ('a -> 'b io) -> 'b io) = bind
 
 let interact : unit io =
-    read_pure >>= (fun lines ->
+    stdin_pure >>= (fun lines ->
         args_pure >>= (fun args ->
             let all_input =
-                S.concat "\n" [(S.concat " " |. A.to_list) args; lines] in
+                S.concat
+                    "\n"
+                    [ (S.concat " " |. A.to_list) args
+                    ; (S.concat "\n" lines)
+                    ] in
             (print_pure print_endline all_input)))
 
 let world_to_void (f : unit io) : unit = ((fun _ -> ()) |. f) World
