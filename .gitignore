@@ -5,4 +5,5 @@
 !main
 !main.py
 !main.ml
-!data.json
+!*.json
+!*.schema
