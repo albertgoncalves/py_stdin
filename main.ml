@@ -34,15 +34,15 @@ let args_pure (io : world) : string array io = (Y.argv, io)
 let bind (m : 'a io_t) (f : 'a -> 'b io_t) : 'b io_t = uncurry f |. m
 let (>>=) : ('a io_t -> ('a -> 'b io_t) -> 'b io_t) = bind
 
-let perform_io : unit io_t =
+let interact : unit io_t =
     read_pure >>= (fun lines ->
         args_pure >>= (fun args ->
             let all_input =
                 S.concat "\n" [(S.concat " " |. A.to_list) args; lines] in
             (print_pure print_endline all_input)))
 
-let io_to_void (f : unit io_t) : unit = ((fun _ -> ()) |. f) World
+let world_to_void (f : unit io_t) : unit = ((fun _ -> ()) |. f) World
 
-let main () = perform_io |> io_to_void
+let main () = interact |> world_to_void
 
 let () = main ()
