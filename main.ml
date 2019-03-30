@@ -36,9 +36,10 @@ let (>>=) : ('a io_t -> ('a -> 'b io_t) -> 'b io_t) = bind
 
 let perform_io : unit io_t =
     read_pure >>= (fun lines ->
-    args_pure >>= (fun args ->
-    let all_input = S.concat "\n" [(S.concat " " |. A.to_list) args; lines] in
-    (print_pure print_endline all_input)))
+        args_pure >>= (fun args ->
+            let all_input =
+                S.concat "\n" [(S.concat " " |. A.to_list) args; lines] in
+            (print_pure print_endline all_input)))
 
 let io_to_void (f : unit io_t) : unit = ((fun _ -> ()) |. f) World
 
